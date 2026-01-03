@@ -2,131 +2,224 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>FairDraw™</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FairDraw™ | Live Allocation</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f5f5f5;
-      padding: 20px;
+    body { font-family: 'Poppins', sans-serif; }
+    
+    /* The Glassmorphism Card Style */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .card {
-      display: inline-block;
-      padding: 15px 20px;
-      margin: 10px;
-      background: white;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 2px solid #333;
+
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+      border-color: #a855f7; /* Purple accent */
     }
-    .claimed {
-      background: #ccc;
-      cursor: not-allowed;
+
+    /* Loading Spinner */
+    .loader {
+      border-top-color: #a855f7;
+      -webkit-animation: spinner 1.5s linear infinite;
+      animation: spinner 1.5s linear infinite;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen flex flex-col items-center justify-center p-4">
 
-<h1>🎉 FairDraw™ – Live Contribution Order System</h1>
-<p>Select a card to receive a random number</p>
+  <div class="max-w-5xl w-full text-center space-y-8">
+    
+    <div class="space-y-2 animate-fade-in-down">
+      <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        FairDraw™
+      </h1>
+      <p class="text-gray-400 text-lg">Live Contribution Order System</p>
+    </div>
 
-<div id="cards"></div>
+    <div class="glass-panel inline-block px-6 py-2 rounded-full text-sm text-gray-300 mb-4">
+      <span id="status-text"><i class="fas fa-circle-notch fa-spin mr-2"></i>Connecting...</span>
+    </div>
 
-<button onclick="resetDraw()">Reset Draw</button>
+    <div id="cards-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import {
-    getDatabase,
-    ref,
-    get,
-    set,
-    update
-  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+    <div class="mt-12 pt-8 border-t border-gray-800">
+      <button onclick="resetDraw()" class="text-gray-500 hover:text-red-500 transition-colors text-sm">
+        <i class="fas fa-trash-alt mr-2"></i>Reset System
+      </button>
+    </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDzcIfNjyZ_KHmRdhPQ51oijQLhIjD1gtQ",
-    authDomain: "yufairdraw-26.firebaseapp.com",
-    databaseURL: "https://yufairdraw-26-default-rtdb.firebaseio.com",
-    projectId: "yufairdraw-26",
-    storageBucket: "yufairdraw-26.firebasestorage.app",
-    messagingSenderId: "616288858088",
-    appId: "1:616288858088:web:0a0c8ebadb62ae78953e5d"
-  };
+  </div>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction, set, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-  const cards = [
-    "Alpha", "Bravo", "Charlie", "Delta", "Echo",
-    "Foxtrot", "Gamma", "Helios", "Indigo", "Juno"
-  ];
+    const firebaseConfig = {
+        apiKey: "AIzaSyDzcIfNjyZ_KHmRdhPQ51oijQLhIjD1gtQ",
+        authDomain: "yufairdraw-26.firebaseapp.com",
+        databaseURL: "https://yufairdraw-26-default-rtdb.firebaseio.com",
+        projectId: "yufairdraw-26",
+        storageBucket: "yufairdraw-26.firebasestorage.app",
+        messagingSenderId: "616288858088",
+        appId: "1:616288858088:web:0a0c8ebadb62ae78953e5d"
+    };
 
-  const sessionRef = ref(db, "draws/session1/numbers");
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  async function initNumbers() {
-    const snap = await get(sessionRef);
-    if (!snap.exists()) {
-      let data = {};
-      for (let i = 1; i <= 10; i++) {
-        data[i] = { claimed: false };
+    // Hardcoded participants for now
+    const participantNames = [
+      "Alpha", "Bravo", "Charlie", "Delta", "Echo",
+      "Foxtrot", "Gamma", "Helios", "Indigo", "Juno"
+    ];
+
+    const sessionRef = ref(db, 'draws/session1');
+
+    // 1. INITIAL SETUP (Ensures DB exists)
+    async function ensureDbStructure() {
+      const snap = await get(sessionRef);
+      if (!snap.exists()) {
+        const initialState = {
+           participants: {} 
+        };
+        // Initialize participants with no numbers
+        participantNames.forEach(name => {
+            initialState.participants[name] = { number: null };
+        });
+        await set(sessionRef, initialState);
       }
-      await set(sessionRef, data);
-    }
-  }
-
-  async function drawNumber(cardName) {
-    const snap = await get(sessionRef);
-    const numbers = snap.val();
-
-    const available = Object.keys(numbers).filter(
-      n => numbers[n].claimed === false
-    );
-
-    if (available.length === 0) {
-      alert("All numbers have been assigned!");
-      return;
     }
 
-    const picked = available[Math.floor(Math.random() * available.length)];
-
-    await update(ref(db, `draws/session1/numbers/${picked}`), {
-      claimed: true,
-      card: cardName
+    // 2. REAL-TIME LISTENER (The Magic)
+    // This runs every time ANYONE changes the database
+    onValue(sessionRef, (snapshot) => {
+      const data = snapshot.val();
+      if(data) {
+        document.getElementById('status-text').innerHTML = `<i class="fas fa-wifi text-green-500 mr-2"></i>System Online`;
+        renderGrid(data.participants || {});
+      }
     });
 
-    alert(`${cardName} got number ${picked}`);
-    renderCards();
-  }
+    // 3. RENDER FUNCTION (The Visuals)
+    function renderGrid(participantsData) {
+      const grid = document.getElementById('cards-grid');
+      grid.innerHTML = ''; // Clear current grid
 
-  async function renderCards() {
-    const container = document.getElementById("cards");
-    container.innerHTML = "";
+      participantNames.forEach(name => {
+        const pData = participantsData[name] || { number: null };
+        const isClaimed = pData.number !== null;
 
-    cards.forEach(card => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerText = card;
-      div.onclick = () => drawNumber(card);
-      container.appendChild(div);
-    });
-  }
+        // Create Card Element
+        const card = document.createElement('div');
+        
+        // Dynamic Classes based on state
+        let cardClasses = "glass-panel rounded-xl p-6 h-40 flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden ";
+        
+        if (isClaimed) {
+          // CLAIMED STYLE: Green border, glowing
+          cardClasses += "border-green-500/50 bg-green-900/10";
+        } else {
+          // UNCLAIMED STYLE: Clickable
+          cardClasses += "card-hover cursor-pointer hover:bg-white/5";
+          card.onclick = () => handleDraw(name);
+        }
 
-  window.resetDraw = async () => {
-    if (!confirm("Reset entire draw?")) return;
-    await set(sessionRef, null);
-    await initNumbers();
-    alert("Draw reset successfully");
-  };
+        card.className = cardClasses;
 
-  await initNumbers();
-  renderCards();
-</script>
+        // Card Content
+        if (isClaimed) {
+            // Show the Number
+            card.innerHTML = `
+                <div class="text-xs uppercase tracking-widest text-green-400 mb-1">Position</div>
+                <div class="text-5xl font-bold text-white mb-2">#${pData.number}</div>
+                <div class="text-sm text-gray-400">${name}</div>
+            `;
+        } else {
+            // Show the Name (Button)
+            card.innerHTML = `
+                <div class="h-12 w-12 rounded-full bg-purple-600/20 flex items-center justify-center mb-3 text-purple-400">
+                    <i class="fas fa-fingerprint text-xl"></i>
+                </div>
+                <div class="text-xl font-bold text-gray-200">${name}</div>
+                <div class="text-xs text-gray-500 mt-1">Tap to Reveal</div>
+            `;
+        }
 
+        grid.appendChild(card);
+      });
+    }
+
+    // 4. TRANSACTION LOGIC (The Safety)
+    async function handleDraw(name) {
+      // Run a transaction on the WHOLE session to ensure uniqueness
+      await runTransaction(sessionRef, (currentData) => {
+        if (!currentData) return;
+
+        // Check if this person already has a number (double click prevention)
+        if (currentData.participants[name].number !== null) {
+          return; // Abort, already has one
+        }
+
+        // Find which numbers are already taken
+        const takenNumbers = [];
+        Object.values(currentData.participants).forEach(p => {
+            if(p.number) takenNumbers.push(p.number);
+        });
+
+        // Calculate available numbers (1 to 10)
+        const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
+        const available = allNumbers.filter(n => !takenNumbers.includes(n));
+
+        if (available.length === 0) return; // No numbers left
+
+        // Pick random
+        const randomIndex = Math.floor(Math.random() * available.length);
+        const pickedNumber = available[randomIndex];
+
+        // Assign to user
+        currentData.participants[name].number = pickedNumber;
+
+        return currentData;
+      });
+
+      // Trigger Confetti purely for visual joy
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#a855f7', '#ec4899', '#ffffff']
+      });
+    }
+
+    // 5. RESET FUNCTION
+    window.resetDraw = async () => {
+        if(!confirm("⚠️ Are you sure you want to reset the whole board?")) return;
+        
+        await set(sessionRef, null);
+        await ensureDbStructure();
+        alert("Board Reset!");
+    };
+
+    // Kickoff
+    ensureDbStructure();
+
+  </script>
 </body>
 </html>
