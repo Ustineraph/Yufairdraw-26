@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairDraw™ | Live Allocation</title>
+  <title>FairDraw™ | Autostine</title>
   
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,64 +13,74 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
-    body { font-family: 'Poppins', sans-serif; }
+    body { font-family: 'Outfit', sans-serif; }
     
-    /* The Glassmorphism Card Style */
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Premium Glassmorphism */
+    .glass-card {
+      background: rgba(20, 20, 20, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    .card-hover:hover {
+    /* Hover Effects */
+    .slot-hover:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
-      border-color: #a855f7; /* Purple accent */
+      border-color: #d4af37; /* Gold Border */
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
     }
 
-    /* Loading Spinner */
-    .loader {
-      border-top-color: #a855f7;
-      -webkit-animation: spinner 1.5s linear infinite;
-      animation: spinner 1.5s linear infinite;
-    }
-    @keyframes spinner {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* Signature Glow */
+    .signature-glow {
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-black text-white min-h-screen flex flex-col relative overflow-x-hidden">
 
-  <div class="max-w-5xl w-full text-center space-y-8">
+  <div class="fixed inset-0 z-0 pointer-events-none">
+    <div class="absolute top-0 left-0 w-96 h-96 bg-purple-900/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-yellow-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 flex-grow flex flex-col items-center justify-center p-6">
     
-    <div class="space-y-2 animate-fade-in-down">
-      <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-        FairDraw™
-      </h1>
-      <p class="text-gray-400 text-lg">Live Contribution Order System</p>
-    </div>
-
-    <div class="glass-panel inline-block px-6 py-2 rounded-full text-sm text-gray-300 mb-4">
-      <span id="status-text"><i class="fas fa-circle-notch fa-spin mr-2"></i>Connecting...</span>
-    </div>
-
-    <div id="cards-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <div class="text-center mb-10 space-y-2">
+      <div class="inline-flex items-center px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-xs tracking-widest uppercase mb-4">
+        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span> System Live
       </div>
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">
+        FairDraw<span class="text-yellow-500">.</span>
+      </h1>
+      <p class="text-gray-500 font-light text-lg">Secure Random Allocation Protocol</p>
+    </div>
 
-    <div class="mt-12 pt-8 border-t border-gray-800">
-      <button onclick="resetDraw()" class="text-gray-500 hover:text-red-500 transition-colors text-sm">
-        <i class="fas fa-trash-alt mr-2"></i>Reset System
+    <div id="cards-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 w-full max-w-6xl">
+      <div class="col-span-full text-center text-gray-500 animate-pulse py-10">
+        Connecting to Database...
+      </div>
+    </div>
+
+    <div class="mt-16 opacity-30 hover:opacity-100 transition-opacity">
+      <button onclick="resetDraw()" class="text-xs uppercase tracking-widest text-red-500 hover:text-red-400 border border-red-900/30 px-4 py-2 rounded">
+        <i class="fas fa-redo-alt mr-2"></i> Reset System
       </button>
     </div>
 
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getDatabase, ref, onValue, runTransaction, set, get } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+  <footer class="relative z-10 w-full py-6 text-center border-t border-white/5 bg-black/50 backdrop-blur-md">
+    <p class="text-gray-500 text-sm">
+      Designed & Engineered by <span class="text-yellow-500 font-bold signature-glow">Autostine</span>
+    </p>
+  </footer>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction, set, get } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // NOTE: I updated the version to 11.1.0 to ensure stability
     const firebaseConfig = {
         apiKey: "AIzaSyDzcIfNjyZ_KHmRdhPQ51oijQLhIjD1gtQ",
         authDomain: "yufairdraw-26.firebaseapp.com",
@@ -84,140 +94,117 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Hardcoded participants for now
-    const participantNames = [
-      "Alpha", "Bravo", "Charlie", "Delta", "Echo",
-      "Foxtrot", "Gamma", "Helios", "Indigo", "Juno"
-    ];
+    // Create 10 Generic Slots
+    const slotIds = Array.from({length: 10}, (_, i) => `SLOT-${String(i + 1).padStart(2, '0')}`);
+    const sessionRef = ref(db, 'draws/v2_session');
 
-    const sessionRef = ref(db, 'draws/session1');
-
-    // 1. INITIAL SETUP (Ensures DB exists)
+    // 1. Setup DB Structure if missing
     async function ensureDbStructure() {
-      const snap = await get(sessionRef);
-      if (!snap.exists()) {
-        const initialState = {
-           participants: {} 
-        };
-        // Initialize participants with no numbers
-        participantNames.forEach(name => {
-            initialState.participants[name] = { number: null };
-        });
-        await set(sessionRef, initialState);
+      try {
+        const snap = await get(sessionRef);
+        if (!snap.exists()) {
+          const initialState = { slots: {} };
+          slotIds.forEach(id => {
+              initialState.slots[id] = { number: null };
+          });
+          await set(sessionRef, initialState);
+        }
+      } catch (e) {
+        console.error("DB Error:", e);
+        alert("Sync Error: Please check Firebase Rules.");
       }
     }
 
-    // 2. REAL-TIME LISTENER (The Magic)
-    // This runs every time ANYONE changes the database
+    // 2. Real-time Listener
     onValue(sessionRef, (snapshot) => {
       const data = snapshot.val();
-      if(data) {
-        document.getElementById('status-text').innerHTML = `<i class="fas fa-wifi text-green-500 mr-2"></i>System Online`;
-        renderGrid(data.participants || {});
+      if(data && data.slots) {
+        renderGrid(data.slots);
+      } else {
+        ensureDbStructure();
       }
     });
 
-    // 3. RENDER FUNCTION (The Visuals)
-    function renderGrid(participantsData) {
+    // 3. Render Function
+    function renderGrid(slotsData) {
       const grid = document.getElementById('cards-grid');
-      grid.innerHTML = ''; // Clear current grid
+      grid.innerHTML = ''; 
 
-      participantNames.forEach(name => {
-        const pData = participantsData[name] || { number: null };
-        const isClaimed = pData.number !== null;
+      slotIds.forEach(id => {
+        const slotData = slotsData[id] || { number: null };
+        const isClaimed = slotData.number !== null;
+        const displayId = id.replace('-', ' '); // "SLOT 01"
 
-        // Create Card Element
         const card = document.createElement('div');
         
-        // Dynamic Classes based on state
-        let cardClasses = "glass-panel rounded-xl p-6 h-40 flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden ";
+        let baseClass = "glass-card rounded-xl h-48 flex flex-col items-center justify-center transition-all duration-500 relative overflow-hidden group ";
         
         if (isClaimed) {
-          // CLAIMED STYLE: Green border, glowing
-          cardClasses += "border-green-500/50 bg-green-900/10";
+          // CLAIMED (Revealed)
+          card.className = baseClass + "border-yellow-500/40 bg-yellow-900/10";
+          card.innerHTML = `
+            <div class="absolute top-3 left-3 text-[10px] text-yellow-600 font-bold tracking-widest">${displayId}</div>
+            <div class="text-yellow-500 text-sm font-bold tracking-widest uppercase mb-1">Assigned Position</div>
+            <div class="text-6xl font-bold text-white drop-shadow-lg">${slotData.number}</div>
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-yellow-500"></div>
+          `;
         } else {
-          // UNCLAIMED STYLE: Clickable
-          cardClasses += "card-hover cursor-pointer hover:bg-white/5";
-          card.onclick = () => handleDraw(name);
+          // UNCLAIMED (Locked)
+          card.className = baseClass + "slot-hover cursor-pointer hover:bg-white/5";
+          card.onclick = () => handleDraw(id);
+          card.innerHTML = `
+            <div class="text-gray-600 group-hover:text-yellow-400 transition-colors text-4xl mb-3">
+              <i class="fas fa-lock"></i>
+            </div>
+            <div class="text-xl font-medium text-gray-300 group-hover:text-white">${displayId}</div>
+            <div class="text-xs text-gray-500 mt-2 group-hover:text-yellow-500/80">Tap to Unlock</div>
+          `;
         }
-
-        card.className = cardClasses;
-
-        // Card Content
-        if (isClaimed) {
-            // Show the Number
-            card.innerHTML = `
-                <div class="text-xs uppercase tracking-widest text-green-400 mb-1">Position</div>
-                <div class="text-5xl font-bold text-white mb-2">#${pData.number}</div>
-                <div class="text-sm text-gray-400">${name}</div>
-            `;
-        } else {
-            // Show the Name (Button)
-            card.innerHTML = `
-                <div class="h-12 w-12 rounded-full bg-purple-600/20 flex items-center justify-center mb-3 text-purple-400">
-                    <i class="fas fa-fingerprint text-xl"></i>
-                </div>
-                <div class="text-xl font-bold text-gray-200">${name}</div>
-                <div class="text-xs text-gray-500 mt-1">Tap to Reveal</div>
-            `;
-        }
-
         grid.appendChild(card);
       });
     }
 
-    // 4. TRANSACTION LOGIC (The Safety)
-    async function handleDraw(name) {
-      // Run a transaction on the WHOLE session to ensure uniqueness
+    // 4. Secure Transaction
+    async function handleDraw(slotId) {
       await runTransaction(sessionRef, (currentData) => {
-        if (!currentData) return;
+        if (!currentData || !currentData.slots) return;
+        if (currentData.slots[slotId].number !== null) return; // Already taken
 
-        // Check if this person already has a number (double click prevention)
-        if (currentData.participants[name].number !== null) {
-          return; // Abort, already has one
-        }
-
-        // Find which numbers are already taken
-        const takenNumbers = [];
-        Object.values(currentData.participants).forEach(p => {
-            if(p.number) takenNumbers.push(p.number);
+        // Find taken numbers
+        const taken = [];
+        Object.values(currentData.slots).forEach(s => {
+            if(s.number) taken.push(s.number);
         });
 
-        // Calculate available numbers (1 to 10)
-        const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
-        const available = allNumbers.filter(n => !takenNumbers.includes(n));
+        // Find available
+        const all = Array.from({length: 10}, (_, i) => i + 1);
+        const available = all.filter(n => !taken.includes(n));
 
-        if (available.length === 0) return; // No numbers left
+        if (available.length === 0) return;
 
-        // Pick random
-        const randomIndex = Math.floor(Math.random() * available.length);
-        const pickedNumber = available[randomIndex];
-
-        // Assign to user
-        currentData.participants[name].number = pickedNumber;
+        // Pick Random
+        const picked = available[Math.floor(Math.random() * available.length)];
+        currentData.slots[slotId].number = picked;
 
         return currentData;
       });
 
-      // Trigger Confetti purely for visual joy
+      // Visual Celebration
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#a855f7', '#ec4899', '#ffffff']
+        particleCount: 150,
+        spread: 100,
+        colors: ['#FFD700', '#FFFFFF'] // Gold and White
       });
     }
 
-    // 5. RESET FUNCTION
+    // 5. Reset
     window.resetDraw = async () => {
-        if(!confirm("⚠️ Are you sure you want to reset the whole board?")) return;
-        
+        if(!confirm("Reset the entire system? This cannot be undone.")) return;
         await set(sessionRef, null);
         await ensureDbStructure();
-        alert("Board Reset!");
     };
 
-    // Kickoff
+    // Initialize
     ensureDbStructure();
 
   </script>
